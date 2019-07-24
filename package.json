@@ -4,6 +4,7 @@
     "main": "src/index.js",
     "scripts": {
         "start": "webpack-dev-server --open",
+        "dev": "webpack --mode development",
         "build": "webpack --mode production",
         "watch": "webpack --watch",
         "clean": "rm -rf dist"
