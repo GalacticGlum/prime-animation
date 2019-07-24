@@ -1,8 +1,8 @@
 export default function sketch(s) {
     let x, y, backgroundColor;
 
-    const width = 500;
-    const height = 500;
+    const width = screen.width;
+    const height = screen.height;
 
     s.setup = () => {
         s.createCanvas(width, height);
