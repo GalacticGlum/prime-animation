@@ -81,20 +81,10 @@ export default function sketch(p5) {
         scale -= scale * 0.001;
         p5.scale(scale);
 
-        for (var i = 0; i < currentPoints.length; ++i)
-        {       
-            const t = (p5.millis() - lastTime) / COOLDOWN;  
-            let p;
-
-            // We don't lerp the last point...
-            if (i == currentPoints.length - 1)
-            {
-                continue;
-            }
-            else
-            {
-                p = lerpVector(previousPoints[i], currentPoints[i], t);            
-            }
+        for (var i = 0; i < currentPoints.length - 1; ++i)
+        {
+            const t = (p5.millis() - lastTime) / COOLDOWN;           
+            let p = lerpVector(previousPoints[i], currentPoints[i], t);
  
             p5.noStroke();
             p5.fill(p5.color(255, 255, 255));
