@@ -10,6 +10,7 @@
         "clean": "rm -rf dist"
     },
     "dependencies": {
+        "ccapture.js": "aceslowman/ccapture.js#npm-fix",
         "p5": "^0.9.0"
     },
     "devDependencies": {

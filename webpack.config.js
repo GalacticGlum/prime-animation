@@ -67,6 +67,7 @@ module.exports = {
     plugins: [
         new CleanWebpackPlugin(),
         new HtmlWebpackPlugin({
+            hash: true,
             template: path.resolve(__dirname, 'src', 'index.html'),
             inject: 'body',
         }),
@@ -77,5 +78,6 @@ module.exports = {
             }
         ])
     ],
+    // node: { fs: 'empty' },
     devtool: 'source-map'
 };

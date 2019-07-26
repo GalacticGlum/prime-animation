@@ -1,4 +1,26 @@
+import CCapture from 'ccapture.js';
+import { rejects } from 'assert';
+
 export default function sketch(p5) {
+    // The FPS of the animation recording.
+    const RECORDING_FPS = 30;
+    // The total number of frames that consist of the recording.
+    var TOTAL_RECORDING_FRAMES;
+    // A boolean indicating whether we should record the animation.
+    const RECORD_ANIMATION = true;
+    // The duration of the recording in milliseconds.
+    const RECORDING_DURATION = 270000;
+    // The width of a recorded frame.
+    const RECORDING_FRAME_WIDTH = 1920;
+    // The height of a recorded frame.
+    const RECORDING_FRAME_HEIGHT = 1080;
+    // The CCapture instance.
+    var capturer;
+    // A boolean indicating whether the recording has finished.
+    var hasFinishedRecording = false;
+    // The current number of frames that have been recorded.
+    var currentRecordingFrameCount = 0;
+
     // The number of coils in the spiral
     var COILS = 10;
     // The distance between points
@@ -74,7 +96,7 @@ export default function sketch(p5) {
             curve: function(t) {
                 return p5.lerp(0, 1, t);
             },
-            delay: 20000
+            delay: 40000
         }
     ]
 
@@ -90,20 +112,14 @@ export default function sketch(p5) {
 
     // Delta time calculation
     var deltaTime = 0;
-    var lastFrameTime = 0;    
+    var lastFrameTime = 0;
+    var startTime;  
 
     // A dictionary mapping the natural numbers to their factor counts
     var factors;
     var MAX_FACTOR_COUNT = 0;
 
-    p5.setup = () => {
-        // Initialize the window dimension variables
-        p5.windowResized();
-        p5.createCanvas(width, height);
-        p5.frameRate(60);
- 
-        SPIRAL_RADIUS = Math.max(width, height) * 0.25;
-        
+    p5.setup = () => {        
         factors = new Array(MAX_N + 1).fill(0);
         factors[0] = 0;
         factors[1] = 1;
@@ -119,14 +135,71 @@ export default function sketch(p5) {
 
             MAX_FACTOR_COUNT = Math.max(MAX_FACTOR_COUNT, factors[i]);
         }
+
+        // Setup the capturer
+        var frameRate = 60;
+        if (RECORD_ANIMATION)
+        {
+            frameRate = RECORDING_FPS;
+            width = RECORDING_FRAME_WIDTH;
+            height = RECORDING_FRAME_HEIGHT;
+
+            capturer = new CCapture({ format: 'png', framerate: RECORDING_FPS });
+            capturer.start();
+            capturer.capture(document.getElementById('defaultCanvas0'));
+
+            TOTAL_RECORDING_FRAMES = (RECORDING_DURATION / 1000) * RECORDING_FPS;
+        }
+        else
+        {
+            p5.windowResized();
+        }
+
+        p5.createCanvas(width, height);
+        p5.frameRate(frameRate);
+
+        SPIRAL_RADIUS = Math.max(width, height) * 0.25;
     };
 
     p5.draw = () => {
         p5.background(p5.color(0, 0, 0));
+        if (RECORD_ANIMATION && hasFinishedRecording) return;
+
         updateDeltaTime();
+        updateRecording();
         updateTransformations();
         drawSpiral();
+
+        if (RECORD_ANIMATION)
+        {
+            currentRecordingFrameCount += 1;
+            console.log('Saved frame ' + currentRecordingFrameCount);
+            capturer.capture(document.getElementById('defaultCanvas0'));
+        }
     };
+
+    function updateRecording()
+    {
+        if (!RECORD_ANIMATION) return;
+
+        const recordingProgress = currentRecordingFrameCount / TOTAL_RECORDING_FRAMES;
+        drawProgressBar(recordingProgress, p5.createVector(10, 10), p5.createVector(200, 20));
+
+        if (startTime == null)
+        {
+            startTime = p5.millis();
+        }
+
+        const elapsed = p5.millis() - startTime;
+        if (elapsed > RECORDING_DURATION)
+        {
+            console.log('Finished recording...');
+            capturer.stop();
+            capturer.save();
+
+            hasFinishedRecording = true;
+        }
+    }
 
     function updateDeltaTime()
     {
@@ -202,9 +275,12 @@ export default function sketch(p5) {
     }
 
     p5.windowResized = () => {
+        // We don't want to resize the canvas if we are recording an animation...
+        if (RECORD_ANIMATION) return;
+
         width = window.innerWidth;
         height = window.innerHeight;    
-        p5.createCanvas(width, height);
+        p5.resizeCanvas(width, height);
     }
 
     function isPrime(n)
@@ -288,5 +364,19 @@ export default function sketch(p5) {
         currentThreshold = Math.min(currentThreshold, colours.length - 1);
         const adjustedT = (t - (currentThreshold - 1) * interval) / interval;
         return interpolateColour(colours[currentThreshold - 1], colours[currentThreshold], adjustedT, gradientFunction);
+    }
+
+    function drawProgressBar(progress, position, size)
+    {
+        // Clamp the progress between 0 and 1.
+        progress = Math.min(Math.max(progress, 0), 1);
+
+        p5.stroke(255);
+        p5.noFill();
+        p5.rect(position.x, position.y, size.x, size.y);
+
+        p5.noStroke();
+        p5.fill(255, 100);
+        p5.rect(position.x, position.y, progress * size.x, size.y);
     }
 }
