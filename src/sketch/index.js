@@ -8,7 +8,7 @@ export default function sketch(p5) {
     // The total number of frames that consist of the recording.
     var TOTAL_RECORDING_FRAMES;
     // A boolean indicating whether we should record the animation.
-    const RECORD_ANIMATION = true;
+    const RECORD_ANIMATION = false;
     // The duration of the recording in milliseconds.
     const RECORDING_DURATION = 270000;
     // The width of a recorded frame.
@@ -22,6 +22,11 @@ export default function sketch(p5) {
     // The current number of frames that have been recorded.
     var currentRecordingFrameCount = 0;
 
+    // A boolean indicating whether the numbers should be displayed.
+    const DISPLAY_NUMBERS = true;
+    // The colour of the number text.
+    const NUMBER_TEXT_COLOUR = p5.color(255);
+
     var recordingProgressBarParentElement;
     var recordingProgressBarElement;
     var recordingProgressStatusTextElement;
@@ -31,7 +36,7 @@ export default function sketch(p5) {
     // The distance between points
     const CHORD = 20;
     // The radius of a point on the spiral.
-    const POINT_RADIUS = 10;
+    const POINT_RADIUS = 5;
     // The rotation of the spiral in radians
     var ROTATION = -Math.PI / 2;
     // The direction of the spiral (either +1 or -1).
@@ -100,8 +105,7 @@ export default function sketch(p5) {
             duration: 60000,
             curve: function(t) {
                 return p5.lerp(0, 1, t);
-            },
-            delay: 40000
+            }
         }
     ]
 
@@ -297,7 +301,17 @@ export default function sketch(p5) {
             }
 
             p5.fill(colour);
-            p5.circle(p.x, p.y, POINT_RADIUS); 
+            p5.circle(p.x, p.y, POINT_RADIUS * 2); 
+
+            if (DISPLAY_NUMBERS)
+            {
+                const pointDiameter = POINT_RADIUS * 2;
+                
+                p5.fill(NUMBER_TEXT_COLOUR);
+                p5.textSize(POINT_RADIUS);
+                p5.textAlign(p5.CENTER, p5.CENTER);
+                p5.text(i.toString(), p.x - POINT_RADIUS, p.y - POINT_RADIUS, pointDiameter, pointDiameter);
+            }
         }
     }
 
