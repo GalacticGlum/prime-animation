@@ -73,7 +73,8 @@ export default function sketch(p5) {
             duration: 60000,
             curve: function(t) {
                 return p5.lerp(0, 1, t);
-            }
+            },
+            delay: 20000
         }
     ]
 
