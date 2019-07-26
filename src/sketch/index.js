@@ -146,9 +146,10 @@ export default function sketch(p5) {
     {
         const currentCooldown = handleCurvePeriods(COOLDOWN_CURVE_PERIODS);
 
-        if (N <= MAX_N && p5.millis() >= lastPointUpdateTime + currentCooldown)
+        lastPointUpdateTime += deltaTime;
+        if (N <= MAX_N && lastPointUpdateTime >= currentCooldown)
         {
-            lastPointUpdateTime = p5.millis();
+            lastPointUpdateTime = 0;
 
             N += 1;
             COILS = Math.sqrt(N + 10);
@@ -177,7 +178,7 @@ export default function sketch(p5) {
         // Render the points
         for (var i = 0; i < currentPoints.length - 1; ++i)
         {
-            const t = (p5.millis() - lastPointUpdateTime) / currentCooldown;           
+            const t = lastPointUpdateTime / currentCooldown;           
             let p = lerpVector(previousPoints[i], currentPoints[i], t);
 
             p5.noStroke();
