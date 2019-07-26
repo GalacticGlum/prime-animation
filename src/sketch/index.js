@@ -1,5 +1,5 @@
 import CCapture from 'ccapture.js';
-import { rejects } from 'assert';
+import '../scss/sketch.scss';
 
 export default function sketch(p5) {
     // The FPS of the animation recording.
@@ -20,6 +20,10 @@ export default function sketch(p5) {
     var hasFinishedRecording = false;
     // The current number of frames that have been recorded.
     var currentRecordingFrameCount = 0;
+
+    var recordingProgressBarParentElement;
+    var recordingProgressBarElement;
+    var recordingProgressStatusTextElement;
 
     // The number of coils in the spiral
     var COILS = 10;
@@ -149,6 +153,14 @@ export default function sketch(p5) {
             capturer.capture(document.getElementById('defaultCanvas0'));
 
             TOTAL_RECORDING_FRAMES = (RECORDING_DURATION / 1000) * RECORDING_FPS;
+
+            // Create a progress bar to indicate the recording progress
+            recordingProgressBarParentElement = p5.createElement('div').addClass('recordingProgressBar').id('recordingProgressBarParentElement');
+            recordingProgressBarElement = p5.createElement('div').addClass('bar').id('recordingProgressBarElement');
+            recordingProgressStatusTextElement = p5.createElement('h2').addClass('statusText').id('recordingProgressStatusTextElement');
+
+            recordingProgressStatusTextElement.parent(recordingProgressBarParentElement);
+            recordingProgressBarElement.parent(recordingProgressBarParentElement);
         }
         else
         {
@@ -163,6 +175,7 @@ export default function sketch(p5) {
 
     p5.draw = () => {
         p5.background(p5.color(0, 0, 0));
+        
         if (RECORD_ANIMATION && hasFinishedRecording) return;
 
         updateDeltaTime();
@@ -181,10 +194,8 @@ export default function sketch(p5) {
     function updateRecording()
     {
         if (!RECORD_ANIMATION) return;
-
-        const recordingProgress = currentRecordingFrameCount / TOTAL_RECORDING_FRAMES;
-        drawProgressBar(recordingProgress, p5.createVector(10, 10), p5.createVector(200, 20));
-
+        updateRecordingProgressBar();
+        
         if (startTime == null)
         {
             startTime = p5.millis();
@@ -199,6 +210,16 @@ export default function sketch(p5) {
 
             hasFinishedRecording = true;
         }
+    }
+
+    function updateRecordingProgressBar()
+    {
+        const recordingProgress = currentRecordingFrameCount / TOTAL_RECORDING_FRAMES;
+        recordingProgressBarElement.style('width',  (recordingProgress * 100).toString() + '%');
+
+        const progressStatus =  Math.round(recordingProgress * 100).toString() + '% (Frame ' + 
+            currentRecordingFrameCount + ' / ' + TOTAL_RECORDING_FRAMES + ')';
+        recordingProgressStatusTextElement.html(progressStatus);
     }
 
     function updateDeltaTime()
@@ -364,19 +385,5 @@ export default function sketch(p5) {
         currentThreshold = Math.min(currentThreshold, colours.length - 1);
         const adjustedT = (t - (currentThreshold - 1) * interval) / interval;
         return interpolateColour(colours[currentThreshold - 1], colours[currentThreshold], adjustedT, gradientFunction);
-    }
-
-    function drawProgressBar(progress, position, size)
-    {
-        // Clamp the progress between 0 and 1.
-        progress = Math.min(Math.max(progress, 0), 1);
-
-        p5.stroke(255);
-        p5.noFill();
-        p5.rect(position.x, position.y, size.x, size.y);
-
-        p5.noStroke();
-        p5.fill(255, 100);
-        p5.rect(position.x, position.y, progress * size.x, size.y);
     }
 }
