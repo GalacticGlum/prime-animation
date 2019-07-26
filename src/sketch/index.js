@@ -5,8 +5,6 @@ export default function sketch(p5) {
     const CHORD = 20;
     // The radius of a point on the spiral.
     const POINT_RADIUS = 10;
-    // The radius of the spiral
-    var SPIRAL_RADIUS = 450;
     // The rotation of the spiral in radians
     var ROTATION = -Math.PI / 2;
     // The direction of the spiral (either +1 or -1).
@@ -14,6 +12,7 @@ export default function sketch(p5) {
 
     // The current number of points.
     var N = 0;
+    const MAX_N = 100000;
 
     const SCALE_CURVE_PERIODS = [
         { 
@@ -22,12 +21,7 @@ export default function sketch(p5) {
             duration: 60000,
             curve: function (t) {
                 return 1 - 1 / (1 + Math.pow(10 * t / 3, 9.4));
-            },
-            curveDomain: {
-                start: 0,
-                end: 1
-            },
-            curveDomainCutoff: 1
+            }
         },
         {
             initial: 3,
@@ -35,17 +29,9 @@ export default function sketch(p5) {
             duration: 60000,
             curve: function (t) {
                 return 3 * Math.pow(t, 2) - 2 * Math.pow(t, 3);
-            },
-            curveDomain: {
-                start: 0,
-                end: 1
-            },
-            curveDomainCutoff: 1
+            }
         }
     ]
-
-    var scaleCurvePeriodIndex = 0;
-    var scaleCurvePeriodTimeleft;
 
     const COOLDOWN_CURVE_PERIODS = [
         {
@@ -66,10 +52,8 @@ export default function sketch(p5) {
         }
     ]
 
-    // The current amount of time, in milliseconds, to wait between increment N.
-    var currentCooldown;
-    var cooldownCurvePeriodIndex = 0;
-    var cooldownCurvePeriodTimeleft;
+    // The radius of the spiral
+    var SPIRAL_RADIUS_CURVE_PERIODS;
 
     var width;
     var height;
@@ -86,18 +70,25 @@ export default function sketch(p5) {
         // Initialize the window dimension variables
         p5.windowResized();
         p5.createCanvas(width, height);
+        p5.frameRate(60);
 
-        SPIRAL_RADIUS = Math.min(width, height) * 0.5;
-        
-        scaleCurvePeriodTimeleft = SCALE_CURVE_PERIODS[0].duration;
-        cooldownCurvePeriodTimeleft = COOLDOWN_CURVE_PERIODS[0].duration;
+        SPIRAL_RADIUS_CURVE_PERIODS = [
+            {
+                initial: Math.min(width, height) * 0.25,
+                target: Math.max(width, height) * 0.25,
+                duration: 120000,
+                curve: function(t) {
+                    return p5.lerp(0, 1, t);
+                },
+                delay: 60000
+            }
+        ]
     };
 
     p5.draw = () => {
         p5.background(p5.color(0, 0, 0));
         updateDeltaTime();
         updateTransformations();
-        updateCooldown();
         drawSpiral();
     };
 
@@ -112,66 +103,16 @@ export default function sketch(p5) {
     {
         p5.translate((width - POINT_RADIUS) / 2, (height - POINT_RADIUS) / 2);
 
-        // Calculate the scale
-        var currentScale;
-        if (scaleCurvePeriodIndex < SCALE_CURVE_PERIODS.length)
-        {
-            const currentScaleCurvePeriod = SCALE_CURVE_PERIODS[scaleCurvePeriodIndex];
-
-            const t = currentScaleCurvePeriod.curveDomain.end - (scaleCurvePeriodTimeleft / currentScaleCurvePeriod.duration) * 
-                (currentScaleCurvePeriod.curveDomain.end - currentScaleCurvePeriod.curveDomain.start);
-
-            const interpolation = currentScaleCurvePeriod.curve(t);
-            currentScale = currentScaleCurvePeriod.initial + (currentScaleCurvePeriod.target - currentScaleCurvePeriod.initial) * interpolation;
-            scaleCurvePeriodTimeleft -= deltaTime;
-
-            if (scaleCurvePeriodTimeleft <= 0 || t >= currentScaleCurvePeriod.curveDomainCutoff)
-            {
-                scaleCurvePeriodIndex++;
-                if (scaleCurvePeriodIndex < SCALE_CURVE_PERIODS.length)
-                {
-                    scaleCurvePeriodTimeleft = SCALE_CURVE_PERIODS[scaleCurvePeriodIndex].duration;
-                }
-            }
-        }
-        else
-        {
-            currentScale = SCALE_CURVE_PERIODS[SCALE_CURVE_PERIODS.length - 1].target;
-        }
-
-        p5.scale(currentScale);
-    }
-
-    function updateCooldown()
-    {
-        if (cooldownCurvePeriodIndex < COOLDOWN_CURVE_PERIODS.length)
-        {
-            const currentCooldownCurvePeriod = COOLDOWN_CURVE_PERIODS[cooldownCurvePeriodIndex];
-            const interpolation = currentCooldownCurvePeriod.curve(1 - cooldownCurvePeriodTimeleft / currentCooldownCurvePeriod.duration);
-            
-            currentCooldown = currentCooldownCurvePeriod.initial + (currentCooldownCurvePeriod.target - 
-                currentCooldownCurvePeriod.initial) * interpolation;
-            
-            cooldownCurvePeriodTimeleft -= deltaTime;
-            if (cooldownCurvePeriodTimeleft <= 0)
-            {
-                cooldownCurvePeriodIndex++;
-                if (cooldownCurvePeriodIndex < COOLDOWN_CURVE_PERIODS.length)
-                {
-                    cooldownCurvePeriodTimeleft = COOLDOWN_CURVE_PERIODS[cooldownCurvePeriodIndex].duration;
-                }
-            }
-
-            console.log(currentCooldown);
-        }
-        else
-        {
-            currentCooldown = COOLDOWN_CURVE_PERIODS[COOLDOWN_CURVE_PERIODS.length - 1].target;
-        }
+        const scale = handleCurvePeriods(SCALE_CURVE_PERIODS);
+        p5.scale(scale);
     }
 
     function drawSpiral()
     {
+        const currentCooldown = handleCurvePeriods(COOLDOWN_CURVE_PERIODS);
+        const spiralRadius = handleCurvePeriods(SPIRAL_RADIUS_CURVE_PERIODS);
+        // console.log(spiralRadius, SPIRAL_RADIUS_CURVE_PERIODS.delayTimeLeft);
+
         if (p5.millis() >= lastPointUpdateTime + currentCooldown)
         {
             lastPointUpdateTime = p5.millis();
@@ -185,7 +126,7 @@ export default function sketch(p5) {
             // The value of theta corresponding to the end of the last coil
             var thetaMax = COILS * 2 * Math.PI;
             // How far to step away on each side from the centre
-            var awayStep = SPIRAL_RADIUS / thetaMax; 
+            var awayStep = spiralRadius / thetaMax; 
 
             var count = 0;
             for (var theta = CHORD / awayStep; theta <= thetaMax && count < N; ++count)
@@ -221,5 +162,59 @@ export default function sketch(p5) {
     function lerpVector(a, b, t)
     {
         return p5.createVector(p5.lerp(a.x, b.x, t), p5.lerp(a.y, b.y, t), p5.lerp(a.z, b.z, t));
+    }
+
+    function handleCurvePeriods(curvePeriods)
+    {
+        if (curvePeriods.currentIndex === undefined)
+        {
+            curvePeriods.currentIndex = 0;
+        }
+
+        if (curvePeriods.timeLeft === undefined)
+        {
+            curvePeriods.timeLeft = curvePeriods[curvePeriods.currentIndex].duration;
+        }
+
+        if (curvePeriods.delayTimeLeft === undefined)
+        {
+            curvePeriods.delayTimeLeft = curvePeriods[curvePeriods.currentIndex].delay || 0;
+        }
+
+        var result;
+        if (curvePeriods.currentIndex < curvePeriods.length)
+        {
+            const currentPeriod = curvePeriods[curvePeriods.currentIndex];
+            if (currentPeriod.delay === undefined || curvePeriods.delay <= 0 || curvePeriods.delayTimeLeft <= 0)
+            {
+                const curveDomain = currentPeriod.curveDomain || {start: 0, end: 1};
+                const t = curveDomain.end - (curvePeriods.timeLeft / currentPeriod.duration) * (curveDomain.end - curveDomain.start);
+                
+                result = currentPeriod.initial + (currentPeriod.target - currentPeriod.initial) * currentPeriod.curve(t);
+                curvePeriods.timeLeft -= deltaTime;
+
+                const curveDomainCutoff = currentPeriod.curveDomainCutoff || 1;
+                if (curvePeriods.timeLeft <= 0 || t >= curveDomainCutoff)
+                {
+                    curvePeriods.currentIndex += 1;
+                    if (curvePeriods.currentIndex < curvePeriods.length)
+                    {
+                        curvePeriods.timeLeft = curvePeriods[curvePeriods.currentIndex].duration;
+                        curvePeriods.delayTimeLeft = curvePeriods[curvePeriods.currentIndex].delay || 0;
+                    }
+                }
+            }
+            else
+            {
+                curvePeriods.delayTimeLeft -= deltaTime;
+                result = currentPeriod.initial;
+            }
+        }
+        else
+        {
+            result = curvePeriods[curvePeriods.length - 1].target;
+        }
+
+        return result;
     }
 }
