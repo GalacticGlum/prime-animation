@@ -10,8 +10,7 @@ export default function sketch(p5) {
     // A boolean indicating whether we should record the animation.
     const RECORD_ANIMATION = true;
     // The duration of the recording in milliseconds.
-    // const RECORDING_DURATION = 270000;
-    const RECORDING_DURATION = 30000;
+    const RECORDING_DURATION = 270000;
     // The width of a recorded frame.
     const RECORDING_FRAME_WIDTH = 1920;
     // The height of a recorded frame.
@@ -151,9 +150,9 @@ export default function sketch(p5) {
             height = RECORDING_FRAME_HEIGHT;
 
             capturer = new CCapture({ 
-                format: 'webm', 
+                format: 'png', 
                 display: true,
-                autoSaveTime: 15,
+                autoSaveTime: 30,
                 framerate: RECORDING_FPS
             });
 
