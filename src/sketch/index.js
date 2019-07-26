@@ -12,7 +12,7 @@ export default function sketch(p5) {
 
     // The current number of points.
     var N = 0;
-    const MAX_N = 100000;
+    const MAX_N = 10000;
 
     const SCALE_CURVE_PERIODS = [
         { 
@@ -30,6 +30,15 @@ export default function sketch(p5) {
             curve: function (t) {
                 return p5.lerp(0, 1, t);
             }
+        },
+        {
+            initial: 2,
+            target: 1,
+            duration: 120000,
+            curve: function(t) {
+                return p5.lerp(0, 1, t);
+            },
+            delay: 30000
         }
     ]
 
@@ -57,11 +66,19 @@ export default function sketch(p5) {
             curve: function(t) {
                 return p5.lerp(0, 1, t);
             }
+        },
+        {
+            initial: 200,
+            target: 1,
+            duration: 60000,
+            curve: function(t) {
+                return p5.lerp(0, 1, t);
+            }
         }
     ]
 
     // The radius of the spiral
-    var SPIRAL_RADIUS_CURVE_PERIODS;
+    var SPIRAL_RADIUS;
 
     var width;
     var height;
@@ -74,23 +91,33 @@ export default function sketch(p5) {
     var deltaTime = 0;
     var lastFrameTime = 0;    
 
+    // A dictionary mapping the natural numbers to their factor counts
+    var factors;
+    var MAX_FACTOR_COUNT = 0;
+
     p5.setup = () => {
         // Initialize the window dimension variables
         p5.windowResized();
         p5.createCanvas(width, height);
         p5.frameRate(60);
-
-        SPIRAL_RADIUS_CURVE_PERIODS = [
+ 
+        SPIRAL_RADIUS = Math.max(width, height) * 0.25;
+        
+        factors = new Array(MAX_N + 1).fill(0);
+        factors[0] = 0;
+        factors[1] = 1;
+        for (var i = 2; i <= MAX_N; ++i)
+        {
+            for (var j = 2; j <= Math.floor(Math.sqrt(i)); ++j)
             {
-                initial: Math.min(width, height) * 0.25,
-                target: Math.min(width, height) * 0.5,
-                duration: 40000,
-                curve: function(t) {
-                    return p5.lerp(0, 1, t);
-                },
-                delay: 120000
+                if (i % j == 0)
+                {
+                    factors[i] += 1;
+                }
             }
-        ];
+
+            MAX_FACTOR_COUNT = Math.max(MAX_FACTOR_COUNT, factors[i]);
+        }
     };
 
     p5.draw = () => {
@@ -118,9 +145,8 @@ export default function sketch(p5) {
     function drawSpiral()
     {
         const currentCooldown = handleCurvePeriods(COOLDOWN_CURVE_PERIODS);
-        const spiralRadius = handleCurvePeriods(SPIRAL_RADIUS_CURVE_PERIODS);
 
-        if (p5.millis() >= lastPointUpdateTime + currentCooldown)
+        if (N <= MAX_N && p5.millis() >= lastPointUpdateTime + currentCooldown)
         {
             lastPointUpdateTime = p5.millis();
 
@@ -133,7 +159,7 @@ export default function sketch(p5) {
             // The value of theta corresponding to the end of the last coil
             var thetaMax = COILS * 2 * Math.PI;
             // How far to step away on each side from the centre
-            var awayStep = spiralRadius / thetaMax; 
+            var awayStep = SPIRAL_RADIUS / thetaMax; 
 
             var count = 0;
             for (var theta = CHORD / awayStep; theta <= thetaMax && count < N; ++count)
@@ -153,10 +179,23 @@ export default function sketch(p5) {
         {
             const t = (p5.millis() - lastPointUpdateTime) / currentCooldown;           
             let p = lerpVector(previousPoints[i], currentPoints[i], t);
- 
+
             p5.noStroke();
-            p5.fill(p5.color(255, 255, 255));
-            p5.circle(p.x, p.y, POINT_RADIUS);
+                
+            const factorCount = factors[i];
+            var colour;
+
+            if (factorCount == 0)
+            {
+                colour = p5.color(255, 30, 30)
+            }
+            else
+            {
+                colour = colourGradient([p5.color(10, 10, 10), p5.color(150, 0, 10)], factors[i] / MAX_FACTOR_COUNT, p5.lerp)
+            }
+
+            p5.fill(colour);
+            p5.circle(p.x, p.y, POINT_RADIUS); 
         }
     }
 
@@ -164,6 +203,11 @@ export default function sketch(p5) {
         width = window.innerWidth;
         height = window.innerHeight;    
         p5.createCanvas(width, height);
+    }
+
+    function isPrime(n)
+    {
+        return factors[n] == 0;
     }
 
     function lerpVector(a, b, t)
@@ -223,5 +267,24 @@ export default function sketch(p5) {
         }
 
         return result;
+    }
+
+    function interpolateColour(a, b, t, func)
+    {
+        return p5.color(func(p5.red(a), p5.red(b), t), func(p5.green(a), p5.green(b), t), func(p5.blue(a), p5.blue(b), t));
+    }
+
+    function colourGradient(colours, t, gradientFunction)
+    {
+        const interval = 1 / (colours.length - 1);
+        var currentThreshold = 1;
+        while (t > currentThreshold * interval)
+        {
+            currentThreshold += 1;
+        }
+
+        currentThreshold = Math.min(currentThreshold, colours.length - 1);
+        const adjustedT = (t - (currentThreshold - 1) * interval) / interval;
+        return interpolateColour(colours[currentThreshold - 1], colours[currentThreshold], adjustedT, gradientFunction);
     }
 }
