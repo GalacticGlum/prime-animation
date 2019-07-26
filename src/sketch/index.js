@@ -1,7 +1,8 @@
-import CCapture from 'ccapture.js';
 import '../scss/sketch.scss';
 
 export default function sketch(p5) {
+    // The name of the recording output.
+    const RECORDING_OUTPUT_NAME = 'prime_spiral';
     // The FPS of the animation recording.
     const RECORDING_FPS = 30;
     // The total number of frames that consist of the recording.
@@ -9,7 +10,8 @@ export default function sketch(p5) {
     // A boolean indicating whether we should record the animation.
     const RECORD_ANIMATION = true;
     // The duration of the recording in milliseconds.
-    const RECORDING_DURATION = 270000;
+    // const RECORDING_DURATION = 270000;
+    const RECORDING_DURATION = 30000;
     // The width of a recorded frame.
     const RECORDING_FRAME_WIDTH = 1920;
     // The height of a recorded frame.
@@ -148,9 +150,14 @@ export default function sketch(p5) {
             width = RECORDING_FRAME_WIDTH;
             height = RECORDING_FRAME_HEIGHT;
 
-            capturer = new CCapture({ format: 'png', framerate: RECORDING_FPS });
+            capturer = new CCapture({ 
+                format: 'webm', 
+                display: true,
+                autoSaveTime: 15,
+                framerate: RECORDING_FPS
+            });
+
             capturer.start();
-            capturer.capture(document.getElementById('defaultCanvas0'));
 
             TOTAL_RECORDING_FRAMES = (RECORDING_DURATION / 1000) * RECORDING_FPS;
 
@@ -195,7 +202,7 @@ export default function sketch(p5) {
     {
         if (!RECORD_ANIMATION) return;
         updateRecordingProgressBar();
-        
+
         if (startTime == null)
         {
             startTime = p5.millis();

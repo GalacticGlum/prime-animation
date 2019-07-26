@@ -14,7 +14,7 @@ module.exports = {
         port: 8080,
         open: true,
         openPage: '',
-        stats: 'errors-only',
+        stats: 'errors-only'
     },
     output: {
         path: path.resolve(__dirname, 'dist'),
@@ -70,6 +70,7 @@ module.exports = {
             hash: true,
             template: path.resolve(__dirname, 'src', 'index.html'),
             inject: 'body',
+            title: 'Prime Animation'
         }),
         new CopyWebpackPlugin([
             {

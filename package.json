@@ -3,14 +3,13 @@
     "version": "1.0.0",
     "main": "src/index.js",
     "scripts": {
-        "start": "webpack-dev-server --open",
+        "start": "webpack-dev-server --open --content-base assets/",
         "dev": "webpack --mode development",
         "build": "webpack --mode production",
         "watch": "webpack --watch",
         "clean": "rm -rf dist"
     },
     "dependencies": {
-        "ccapture.js": "aceslowman/ccapture.js#npm-fix",
         "p5": "^0.9.0"
     },
     "devDependencies": {
