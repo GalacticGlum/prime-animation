@@ -25,10 +25,10 @@ export default function sketch(p5) {
         },
         {
             initial: 3,
-            target: 1,
+            target: 2,
             duration: 60000,
             curve: function (t) {
-                return 3 * Math.pow(t, 2) - 2 * Math.pow(t, 3);
+                return p5.lerp(0, 1, t);
             }
         }
     ]
@@ -44,10 +44,18 @@ export default function sketch(p5) {
         },
         {
             initial: 100,
-            target: 1,
-            duration: 60000,
+            target: 50,
+            duration: 30000,
             curve: function(t) {
                 return 3 * Math.pow(t, 2) - 2 * Math.pow(t, 3);
+            }
+        },
+        {
+            initial: 50,
+            target: 200,
+            duration: 40000,
+            curve: function(t) {
+                return p5.lerp(0, 1, t);
             }
         }
     ]
@@ -75,14 +83,14 @@ export default function sketch(p5) {
         SPIRAL_RADIUS_CURVE_PERIODS = [
             {
                 initial: Math.min(width, height) * 0.25,
-                target: Math.max(width, height) * 0.25,
-                duration: 120000,
+                target: Math.min(width, height) * 0.5,
+                duration: 40000,
                 curve: function(t) {
                     return p5.lerp(0, 1, t);
                 },
-                delay: 60000
+                delay: 120000
             }
-        ]
+        ];
     };
 
     p5.draw = () => {
@@ -111,7 +119,6 @@ export default function sketch(p5) {
     {
         const currentCooldown = handleCurvePeriods(COOLDOWN_CURVE_PERIODS);
         const spiralRadius = handleCurvePeriods(SPIRAL_RADIUS_CURVE_PERIODS);
-        // console.log(spiralRadius, SPIRAL_RADIUS_CURVE_PERIODS.delayTimeLeft);
 
         if (p5.millis() >= lastPointUpdateTime + currentCooldown)
         {
