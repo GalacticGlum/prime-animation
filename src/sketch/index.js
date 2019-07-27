@@ -24,9 +24,23 @@ export default function sketch(p5) {
 
     // A boolean indicating whether the numbers should be displayed.
     const DISPLAY_NUMBERS = true;
-    // The colour of the number text.
-    const NUMBER_TEXT_COLOUR = p5.color(255);
-
+    // A boolean indicating whether the prime numbers should be coloured.
+    const COLOUR_PRIME_NUMBERS = true;
+    // The colour of the prime numbers.
+    const PRIME_NUMBER_COLOUR = p5.color(255, 30, 30);
+    // The colour of the number text when the circle represents a prime number and prime number circles have their own colour.
+    const PRIME_NUMBER_TEXT_COLOUR = p5.color(255);
+    // A boolean indicating whether non-prime numbers should be coloured.
+    const COLOUR_NON_PRIME_NUMBERS = true;
+    // The list of colours used for the gradient for non-prime numbers.
+    const NON_PRIME_NUMBER_COLOUR_GRADIENT = [p5.color(10, 10, 10), p5.color(150, 0, 10)];
+    // The colour of the number text when the circle represents a non-prime number and non-prime number circles have their own colour.
+    const NON_PRIME_NUMBER_TEXT_COLOUR = p5.color(255);
+    // The default colour of a circle if no overrides are applied.
+    const DEFAULT_CIRCLE_COLOUR = p5.color(255, 255, 255);
+    // The colour of the number text when the circle has its default colour.
+    const DEFAULT_NUMBER_TEXT_COLOUR = p5.color(0, 0, 0);
+ 
     var recordingProgressBarParentElement;
     var recordingProgressBarElement;
     var recordingProgressStatusTextElement;
@@ -289,15 +303,20 @@ export default function sketch(p5) {
             p5.noStroke();
                 
             const factorCount = factors[i];
-            var colour;
-
+            var colour = DEFAULT_CIRCLE_COLOUR;
+            var textColour = DEFAULT_NUMBER_TEXT_COLOUR;     
             if (factorCount == 0)
             {
-                colour = p5.color(255, 30, 30)
+                if (COLOUR_PRIME_NUMBERS)
+                {
+                    colour = PRIME_NUMBER_COLOUR;
+                    textColour = PRIME_NUMBER_TEXT_COLOUR;
+                }
             }
-            else
+            else if(COLOUR_NON_PRIME_NUMBERS)
             {
-                colour = colourGradient([p5.color(10, 10, 10), p5.color(150, 0, 10)], factors[i] / MAX_FACTOR_COUNT, p5.lerp)
+                colour = colourGradient(NON_PRIME_NUMBER_COLOUR_GRADIENT, factors[i] / MAX_FACTOR_COUNT, p5.lerp)
+                textColour = NON_PRIME_NUMBER_TEXT_COLOUR;
             }
 
             p5.fill(colour);
@@ -305,9 +324,8 @@ export default function sketch(p5) {
 
             if (DISPLAY_NUMBERS)
             {
-                const pointDiameter = POINT_RADIUS * 2;
-                
-                p5.fill(NUMBER_TEXT_COLOUR);
+                const pointDiameter = POINT_RADIUS * 2;      
+                p5.fill(textColour);
                 p5.textSize(POINT_RADIUS);
                 p5.textAlign(p5.CENTER, p5.CENTER);
                 p5.text(i.toString(), p.x - POINT_RADIUS, p.y - POINT_RADIUS, pointDiameter, pointDiameter);
