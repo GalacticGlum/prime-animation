@@ -1,8 +1,4 @@
-import p5 from 'p5';
-import 'p5/lib/addons/p5.sound';
-import 'p5/lib/addons/p5.dom';
-import './scss/index.scss';
+import { withSketch } from './sketchWrapper';
+import primeSpiral from './sketch/primeSpiral';
 
-import sketch from './sketch';
-
-new p5(sketch);
+export default withSketch(primeSpiral);

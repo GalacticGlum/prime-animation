@@ -1,8 +1,6 @@
-import '../scss/sketch.scss';
+import '../scss/primeSpiral.scss';
 
 export default function sketch(p5) {
-    // The name of the recording output.
-    const RECORDING_OUTPUT_NAME = 'prime_spiral';
     // The FPS of the animation recording.
     const RECORDING_FPS = 30;
     // The total number of frames that consist of the recording.

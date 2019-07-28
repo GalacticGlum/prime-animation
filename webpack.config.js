@@ -68,7 +68,7 @@ module.exports = {
         new CleanWebpackPlugin(),
         new HtmlWebpackPlugin({
             hash: true,
-            template: path.resolve(__dirname, 'src', 'index.html'),
+            template: path.resolve(__dirname, 'src', '_template.html'),
             inject: 'body',
             title: 'Prime Animation'
         }),
