@@ -8,7 +8,7 @@ export default function sketch(p5) {
     // The total number of frames that consist of the recording.
     var TOTAL_RECORDING_FRAMES;
     // A boolean indicating whether we should record the animation.
-    const RECORD_ANIMATION = false;
+    const RECORD_ANIMATION = true;
     // The duration of the recording in milliseconds.
     const RECORDING_DURATION = 270000;
     // The width of a recorded frame.
@@ -23,7 +23,7 @@ export default function sketch(p5) {
     var currentRecordingFrameCount = 0;
 
     // A boolean indicating whether the numbers should be displayed.
-    const DISPLAY_NUMBERS = true;
+    const DISPLAY_NUMBERS = false;
     // A boolean indicating whether the prime numbers should be coloured.
     const COLOUR_PRIME_NUMBERS = true;
     // The colour of the prime numbers.
@@ -40,7 +40,11 @@ export default function sketch(p5) {
     const DEFAULT_CIRCLE_COLOUR = p5.color(255, 255, 255);
     // The colour of the number text when the circle has its default colour.
     const DEFAULT_NUMBER_TEXT_COLOUR = p5.color(0, 0, 0);
- 
+
+    // The maximum number of circles that have text drawn on them.
+    // A non-positive value indicates no limit.
+    const MAX_TEXT_CIRCLES = 0;
+
     var recordingProgressBarParentElement;
     var recordingProgressBarElement;
     var recordingProgressStatusTextElement;
@@ -322,12 +326,13 @@ export default function sketch(p5) {
             p5.fill(colour);
             p5.circle(p.x, p.y, POINT_RADIUS * 2); 
 
-            if (DISPLAY_NUMBERS)
+            if (DISPLAY_NUMBERS && (MAX_TEXT_CIRCLES <= 0 || i < MAX_TEXT_CIRCLES))
             {
                 const pointDiameter = POINT_RADIUS * 2;      
                 p5.fill(textColour);
                 p5.textSize(POINT_RADIUS);
                 p5.textAlign(p5.CENTER, p5.CENTER);
+                p5.textStyle(p5.BOLDITALIC);
                 p5.text(i.toString(), p.x - POINT_RADIUS, p.y - POINT_RADIUS, pointDiameter, pointDiameter);
             }
         }
