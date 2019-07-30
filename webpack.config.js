@@ -7,7 +7,8 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 module.exports = {
     entry: {
-        bundle: path.resolve(__dirname, 'src', 'index.js')
+        primeSpiral: path.resolve(__dirname, 'src', 'primeSpiral.js'),
+        ulamSpiral: path.resolve(__dirname, 'src', 'ulamSpiral.js')
     },
     devServer: {
         contentBase: path.resolve(__dirname, 'dist'),
@@ -18,7 +19,7 @@ module.exports = {
     },
     output: {
         path: path.resolve(__dirname, 'dist'),
-        filename: '[name].[chunkhash].js'
+        filename: 'bundle_[name].[chunkhash].js'
     },
     resolve: {
         extensions: [
@@ -70,7 +71,17 @@ module.exports = {
             hash: true,
             template: path.resolve(__dirname, 'src', '_template.html'),
             inject: 'body',
-            title: 'Prime Animation'
+            title: 'Prime Spiral',
+            chunks: ['primeSpiral'],
+            filename: path.resolve(__dirname, 'dist', 'primeSpiral.html')
+        }),
+        new HtmlWebpackPlugin({
+            hash: true,
+            template: path.resolve(__dirname, 'src', '_template.html'),
+            inject: 'body',
+            title: 'Ulam Spiral',
+            chunks: ['ulamSpiral'],
+            filename: path.resolve(__dirname, 'dist', 'ulamSpiral.html')
         }),
         new CopyWebpackPlugin([
             {
@@ -79,6 +90,5 @@ module.exports = {
             }
         ])
     ],
-    // node: { fs: 'empty' },
     devtool: 'source-map'
 };
