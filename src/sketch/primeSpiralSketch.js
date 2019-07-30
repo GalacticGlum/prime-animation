@@ -1,6 +1,7 @@
-import '../scss/primeSpiral.scss';
+import '../scss/_captureOverlay.scss';
 
-export default function sketch(p5) {
+export default function sketch(p5)
+{
     // The FPS of the animation recording.
     const RECORDING_FPS = 30;
     // The total number of frames that consist of the recording.
@@ -19,6 +20,9 @@ export default function sketch(p5) {
     var hasFinishedRecording = false;
     // The current number of frames that have been recorded.
     var currentRecordingFrameCount = 0;
+    var recordingProgressBarParentElement;
+    var recordingProgressBarElement;
+    var recordingProgressStatusTextElement;
 
     // A boolean indicating whether the numbers should be displayed.
     const DISPLAY_NUMBERS = false;
@@ -43,10 +47,6 @@ export default function sketch(p5) {
     // A non-positive value indicates no limit.
     const MAX_TEXT_CIRCLES = 0;
 
-    var recordingProgressBarParentElement;
-    var recordingProgressBarElement;
-    var recordingProgressStatusTextElement;
-
     // The number of coils in the spiral
     var COILS = 10;
     // The distance between points
@@ -62,7 +62,8 @@ export default function sketch(p5) {
     var N = 0;
     const MAX_N = 10000;
 
-    const SCALE_CURVE_PERIODS = [
+    const SCALE_CURVE_PERIODS = 
+    [
         { 
             initial: 10,
             target: 3,
@@ -90,7 +91,8 @@ export default function sketch(p5) {
         }
     ]
 
-    const COOLDOWN_CURVE_PERIODS = [
+    const COOLDOWN_CURVE_PERIODS = 
+    [
         {
             initial: 500,
             target: 100,
@@ -144,7 +146,8 @@ export default function sketch(p5) {
     var factors;
     var MAX_FACTOR_COUNT = 0;
 
-    p5.setup = () => {        
+    p5.setup = () =>
+    {        
         factors = new Array(MAX_N + 1).fill(0);
         factors[0] = 0;
         factors[1] = 1;
@@ -199,7 +202,8 @@ export default function sketch(p5) {
         SPIRAL_RADIUS = Math.max(width, height) * 0.25;
     };
 
-    p5.draw = () => {
+    p5.draw = () =>
+    {
         p5.background(p5.color(0, 0, 0));
         
         if (RECORD_ANIMATION && hasFinishedRecording) return;
@@ -212,7 +216,6 @@ export default function sketch(p5) {
         if (RECORD_ANIMATION)
         {
             currentRecordingFrameCount += 1;
-            console.log('Saved frame ' + currentRecordingFrameCount);
             capturer.capture(document.getElementById('defaultCanvas0'));
         }
     };
@@ -230,7 +233,6 @@ export default function sketch(p5) {
         const elapsed = p5.millis() - startTime;
         if (elapsed > RECORDING_DURATION)
         {
-            console.log('Finished recording...');
             capturer.stop();
             capturer.save();
 
@@ -301,9 +303,7 @@ export default function sketch(p5) {
         {
             const t = lastPointUpdateTime / currentCooldown;           
             let p = lerpVector(previousPoints[i], currentPoints[i], t);
-
-            p5.noStroke();
-                
+     
             const factorCount = factors[i];
             var colour = DEFAULT_CIRCLE_COLOUR;
             var textColour = DEFAULT_NUMBER_TEXT_COLOUR;     
@@ -320,7 +320,8 @@ export default function sketch(p5) {
                 colour = colourGradient(NON_PRIME_NUMBER_COLOUR_GRADIENT, factors[i] / MAX_FACTOR_COUNT, p5.lerp)
                 textColour = NON_PRIME_NUMBER_TEXT_COLOUR;
             }
-
+    
+            p5.noStroke();        
             p5.fill(colour);
             p5.circle(p.x, p.y, POINT_RADIUS * 2); 
 
@@ -336,7 +337,8 @@ export default function sketch(p5) {
         }
     }
 
-    p5.windowResized = () => {
+    p5.windowResized = () =>
+    {
         // We don't want to resize the canvas if we are recording an animation...
         if (RECORD_ANIMATION) return;
 
