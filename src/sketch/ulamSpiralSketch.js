@@ -36,14 +36,41 @@ export default function sketch(p5)
     // The current number of points.
     var N = 0;
     const MAX_N = 10000;
+    var primes;
 
     // The time between adding another point in milliseconds.
-    const COOLDOWN = 500;
+    const COOLDOWN = 100;
     var lastPointUpdateTime = 0;
 
     // The size of a cell in the grid.
     const CELL_SIZE = 5;
+    // The size of a circle cell as a ratio of the cell size.
+    const CIRCLE_CELL_SIZE_RATIO = 0.85;
     const SCALE = 10;
+
+    // A boolean indicating whether the prime numbers should be coloured.
+    const COLOUR_PRIME_NUMBERS = true;
+    // The colour of the prime numbers.
+    const PRIME_NUMBER_COLOUR = p5.color(255);
+    // The colour of the number text when the circle represents a prime number and prime number circles have their own colour.
+    const PRIME_NUMBER_TEXT_COLOUR = p5.color(0);
+    // A boolean indicating whether non-prime numbers should be coloured.
+    const COLOUR_NON_PRIME_NUMBERS = true;
+    // The source colour for the non-prime number colour lerp.
+    const NON_PRIME_NUMBER_COLOUR_FROM = p5.color(10, 10, 10);
+    // The destination colour for the non-prime number colour lerp.
+    const NON_PRIME_NUMBER_COLOUR_TO = p5.color(125, 0, 10);
+    // The colour of the number text when the circle represents a non-prime number and non-prime number circles have their own colour.
+    const NON_PRIME_NUMBER_TEXT_COLOUR = p5.color(255);
+    // The default colour of a circle if no overrides are applied.
+    const DEFAULT_CIRCLE_COLOUR = p5.color(255);
+    // A boolean indicating whether the numbers should be displayed.
+    const DISPLAY_NUMBERS = true;
+    // The colour of the number text when the circle has its default colour.
+    const DEFAULT_NUMBER_TEXT_COLOUR = p5.color(0, 0, 0); 
+    // The maximum number of circles that have text drawn on them.
+    // A non-positive value indicates no limit.
+    const MAX_TEXT_CIRCLES = 16;
 
     p5.setup = () =>
     {
@@ -80,6 +107,18 @@ export default function sketch(p5)
 
         p5.createCanvas(width, height);
         p5.frameRate(frameRate);
+
+        // Initialize the prime list
+        primes = new Array(MAX_N + 1).fill(true);
+        primes[0] = primes[1] = false;
+        for (var i = 2; i <= Math.floor(Math.sqrt(MAX_N)); ++i)
+        {
+            if (!primes[i]) continue;
+            for (var j = i * i; j <= MAX_N; j += i)
+            {
+                primes[j] = false;
+            }
+        }
     }
 
     p5.draw = () =>
@@ -173,7 +212,7 @@ export default function sketch(p5)
                 case 2:
                     y += 1;
                     break;
-                    case 3:
+                case 3:
                     x -= 1;
                     break;
             }
@@ -194,10 +233,59 @@ export default function sketch(p5)
                 }    
             }
 
+            var colour = DEFAULT_CIRCLE_COLOUR;
+            var textColour = DEFAULT_NUMBER_TEXT_COLOUR;
+            if (primes[i])
+            {
+                if (COLOUR_PRIME_NUMBERS)
+                {
+                    colour = PRIME_NUMBER_COLOUR;
+                    textColour = PRIME_NUMBER_TEXT_COLOUR;
+                }
+            }
+            else if (COLOUR_NON_PRIME_NUMBERS)
+            {
+                colour = i > 0 ? p5.lerpColor(NON_PRIME_NUMBER_COLOUR_FROM, NON_PRIME_NUMBER_COLOUR_TO, getFactorRatio(i)) : NON_PRIME_NUMBER_COLOUR_FROM;
+                textColour = NON_PRIME_NUMBER_TEXT_COLOUR;
+            }
+
+            const px = x * CELL_SIZE;
+            const py = y * CELL_SIZE;
+
             p5.noStroke();
-            p5.color(p5.color(255, 255, 255));
-            p5.circle(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE);
+            p5.fill(colour);
+            p5.circle(px, py, CELL_SIZE * CIRCLE_CELL_SIZE_RATIO);
+
+            if (DISPLAY_NUMBERS && (MAX_TEXT_CIRCLES <= 0 || i < MAX_TEXT_CIRCLES))
+            {      
+                p5.fill(textColour);
+                p5.textSize(CELL_SIZE * 0.5);
+                p5.textAlign(p5.CENTER, p5.CENTER);
+                p5.textStyle(p5.BOLDITALIC);
+                p5.text(i.toString(), px - CELL_SIZE * 0.5, py - CELL_SIZE * 0.5, CELL_SIZE, CELL_SIZE);
+            }
         }
+    }
+
+    function getFactorRatio(n)
+    {
+        var i = 2;
+        var foundFactor = false;
+        const sqrtN = Math.sqrt(n);
+
+        while (i <= sqrtN && !foundFactor)
+        {
+            if (n % i == 0)
+            {
+                foundFactor = true;
+            }
+            else
+            {
+                i += 1;
+            }
+        }
+
+        return 1 - i / sqrtN;
     }
 
     p5.windowResized = () =>
