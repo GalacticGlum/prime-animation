@@ -9,7 +9,7 @@ export default function sketch(p5)
     // A boolean indicating whether we should record the animation.
     const RECORD_ANIMATION = true;
     // The duration of the recording in milliseconds.
-    const RECORDING_DURATION = 20-0000;
+    const RECORDING_DURATION = 200000;
     // The width of a recorded frame.
     const RECORDING_FRAME_WIDTH = 1920;
     // The height of a recorded frame.
