@@ -43,10 +43,9 @@ export default function sketch(p5)
     var lastPointUpdateTime = 0;
 
     // The size of a cell in the grid.
-    const CELL_SIZE = 5;
+    const CELL_SIZE = 10;
     // The size of a circle cell as a ratio of the cell size.
     const CIRCLE_CELL_SIZE_RATIO = 0.85;
-    const SCALE = 10;
 
     // A boolean indicating whether the prime numbers should be coloured.
     const COLOUR_PRIME_NUMBERS = true;
@@ -57,7 +56,7 @@ export default function sketch(p5)
     // A boolean indicating whether non-prime numbers should be coloured.
     const COLOUR_NON_PRIME_NUMBERS = true;
     // The source colour for the non-prime number colour lerp.
-    const NON_PRIME_NUMBER_COLOUR_FROM = p5.color(10, 10, 10);
+    const NON_PRIME_NUMBER_COLOUR_FROM = p5.color(10);
     // The destination colour for the non-prime number colour lerp.
     const NON_PRIME_NUMBER_COLOUR_TO = p5.color(125, 0, 10);
     // The colour of the number text when the circle represents a non-prime number and non-prime number circles have their own colour.
@@ -65,12 +64,57 @@ export default function sketch(p5)
     // The default colour of a circle if no overrides are applied.
     const DEFAULT_CIRCLE_COLOUR = p5.color(255);
     // A boolean indicating whether the numbers should be displayed.
-    const DISPLAY_NUMBERS = true;
+    var DISPLAY_NUMBERS = true;
     // The colour of the number text when the circle has its default colour.
     const DEFAULT_NUMBER_TEXT_COLOUR = p5.color(0, 0, 0); 
     // The maximum number of circles that have text drawn on them.
     // A non-positive value indicates no limit.
-    const MAX_TEXT_CIRCLES = 16;
+    const MAX_TEXT_CIRCLES = 36;
+
+    const NUMBER_TEXT_DISPLAY_TIME = 35000;
+    const NUMBER_TEXT_FADE_DURATION = 1000;
+
+    const SCALE_CURVE_PERIODS = 
+    [
+        { 
+            initial: 10,
+            target: 3,
+            duration: 60000,
+            curve: function (t) {
+                return 1 - 1 / (1 + Math.pow(10 * t / 3, 9.4));
+            },
+            delay: 20000
+        },
+        {
+            initial: 3,
+            target: 1,
+            duration: 80000,
+            curve: function (t) {
+                return p5.lerp(0, 1, t);
+            },
+            delay: 40000
+        }
+    ];
+
+    const COOLDOWN_CURVE_PERIODS = 
+    [
+        {
+            initial: 500,
+            target: 1,
+            duration: 160000,
+            curve: function(t) {
+                return p5.lerp(0, 1, t);
+            }
+        },
+        {
+            initial: 1,
+            target: 0.1,
+            duration: 30000,
+            curve: function(t) {
+                return 1 - 1 / (1 + Math.pow(10 * t / 3, 9.4));
+            }
+        }
+    ];
 
     p5.setup = () =>
     {
@@ -123,8 +167,12 @@ export default function sketch(p5)
 
     p5.draw = () =>
     {
-        p5.background(p5.color(0, 0, 0));
-       
+        if (startTime == null)
+        {
+            startTime = p5.millis();
+        }
+
+        p5.background(p5.color(0, 0, 0));   
         if (RECORD_ANIMATION && hasFinishedRecording) return;
 
         updateDeltaTime();
@@ -149,18 +197,15 @@ export default function sketch(p5)
     function updateTransformations()
     {
         p5.translate(width / 2, height / 2);
-        p5.scale(SCALE);
+
+        const scale = handleCurvePeriods(SCALE_CURVE_PERIODS);
+        p5.scale(scale);
     }
 
     function updateRecording()
     {
         if (!RECORD_ANIMATION) return;
         updateRecordingProgressBar();
-
-        if (startTime == null)
-        {
-            startTime = p5.millis();
-        }
 
         const elapsed = p5.millis() - startTime;
         if (elapsed > RECORDING_DURATION)
@@ -184,8 +229,10 @@ export default function sketch(p5)
 
     function drawSpiral()
     {
+        const currentCooldown = handleCurvePeriods(COOLDOWN_CURVE_PERIODS);
+
         lastPointUpdateTime += deltaTime;
-        if (N <= MAX_N && lastPointUpdateTime >= COOLDOWN)
+        if (N <= MAX_N && lastPointUpdateTime >= currentCooldown)
         {
             lastPointUpdateTime = 0;
             N += 1;
@@ -257,7 +304,21 @@ export default function sketch(p5)
             p5.circle(px, py, CELL_SIZE * CIRCLE_CELL_SIZE_RATIO);
 
             if (DISPLAY_NUMBERS && (MAX_TEXT_CIRCLES <= 0 || i < MAX_TEXT_CIRCLES))
-            {      
+            {
+                const elapsedTime = p5.millis() - startTime;
+                var alpha = 255;
+                if (elapsedTime >= NUMBER_TEXT_DISPLAY_TIME)
+                {
+                    const t = (elapsedTime - NUMBER_TEXT_DISPLAY_TIME) / NUMBER_TEXT_FADE_DURATION;
+                    alpha = p5.lerp(255, 0, t);
+
+                    if (t >= 1)
+                    {
+                        DISPLAY_NUMBERS = false;
+                    }
+                }
+
+                textColour.setAlpha(alpha);
                 p5.fill(textColour);
                 p5.textSize(CELL_SIZE * 0.5);
                 p5.textAlign(p5.CENTER, p5.CENTER);
@@ -296,5 +357,59 @@ export default function sketch(p5)
         width = window.innerWidth;
         height = window.innerHeight;    
         p5.resizeCanvas(width, height);
+    }
+
+    function handleCurvePeriods(curvePeriods)
+    {
+        if (curvePeriods.currentIndex === undefined)
+        {
+            curvePeriods.currentIndex = 0;
+        }
+
+        if (curvePeriods.timeLeft === undefined)
+        {
+            curvePeriods.timeLeft = curvePeriods[curvePeriods.currentIndex].duration;
+        }
+
+        if (curvePeriods.delayTimeLeft === undefined)
+        {
+            curvePeriods.delayTimeLeft = curvePeriods[curvePeriods.currentIndex].delay || 0;
+        }
+
+        var result;
+        if (curvePeriods.currentIndex < curvePeriods.length)
+        {
+            const currentPeriod = curvePeriods[curvePeriods.currentIndex];
+            if (currentPeriod.delay === undefined || curvePeriods.delay <= 0 || curvePeriods.delayTimeLeft <= 0)
+            {
+                const curveDomain = currentPeriod.curveDomain || {start: 0, end: 1};
+                const t = curveDomain.end - (curvePeriods.timeLeft / currentPeriod.duration) * (curveDomain.end - curveDomain.start);
+                
+                result = currentPeriod.initial + (currentPeriod.target - currentPeriod.initial) * currentPeriod.curve(t);
+                curvePeriods.timeLeft -= deltaTime;
+
+                const curveDomainCutoff = currentPeriod.curveDomainCutoff || 1;
+                if (curvePeriods.timeLeft <= 0 || t >= curveDomainCutoff)
+                {
+                    curvePeriods.currentIndex += 1;
+                    if (curvePeriods.currentIndex < curvePeriods.length)
+                    {
+                        curvePeriods.timeLeft = curvePeriods[curvePeriods.currentIndex].duration;
+                        curvePeriods.delayTimeLeft = curvePeriods[curvePeriods.currentIndex].delay || 0;
+                    }
+                }
+            }
+            else
+            {
+                curvePeriods.delayTimeLeft -= deltaTime;
+                result = currentPeriod.initial;
+            }
+        }
+        else
+        {
+            result = curvePeriods[curvePeriods.length - 1].target;
+        }
+
+        return result;
     }
 }
