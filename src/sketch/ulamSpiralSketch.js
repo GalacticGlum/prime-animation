@@ -7,9 +7,9 @@ export default function sketch(p5)
     // The total number of frames that consist of the recording.
     var TOTAL_RECORDING_FRAMES;
     // A boolean indicating whether we should record the animation.
-    const RECORD_ANIMATION = false;
+    const RECORD_ANIMATION = true;
     // The duration of the recording in milliseconds.
-    const RECORDING_DURATION = 270000;
+    const RECORDING_DURATION = 20-0000;
     // The width of a recorded frame.
     const RECORDING_FRAME_WIDTH = 1920;
     // The height of a recorded frame.
